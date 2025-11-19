@@ -1,70 +1,66 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
+import Hero from './components/Hero'
+import SpinWheel from './components/SpinWheel'
+import MapFlight from './components/MapFlight'
+import TimerPanel from './components/TimerPanel'
+import AirplaneTakeoff from './components/AirplaneTakeoff'
+import { computeFlight } from './lib/api'
+
 function App() {
+  const [selected, setSelected] = useState(null)
+  const [flight, setFlight] = useState(null)
+  const [takingOff, setTakingOff] = useState(false)
+  const [playing, setPlaying] = useState(false)
+
+  const onStop = async (country) => {
+    setSelected(country)
+    setTakingOff(true)
+    const data = await computeFlight(country)
+    setFlight(data)
+  }
+
+  const onTakeoffEnd = () => {
+    setTakingOff(false)
+    setPlaying(true)
+  }
+
+  const onTimerDone = () => {
+    setPlaying(false)
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_50%)]"></div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-950 to-black text-sky-50">
+      <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_50%_-10%,rgba(56,189,248,0.18),transparent),radial-gradient(900px_500px_at_80%_120%,rgba(59,130,246,0.15),transparent)] pointer-events-none" />
+      <div className="relative space-y-12 sm:space-y-16 px-4 sm:px-6 py-8 max-w-6xl mx-auto">
+        <Hero />
 
-      <div className="relative min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full">
-          {/* Header with Flames icon */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center mb-6">
-              <img
-                src="/flame-icon.svg"
-                alt="Flames"
-                className="w-24 h-24 drop-shadow-[0_0_25px_rgba(59,130,246,0.5)]"
-              />
-            </div>
-
-            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-              Flames Blue
-            </h1>
-
-            <p className="text-xl text-blue-200 mb-6">
-              Build applications through conversation
-            </p>
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          <div className="space-y-6">
+            <SpinWheel onStop={onStop} />
+            <AirplaneTakeoff trigger={takingOff} onEnd={onTakeoffEnd} />
+            {flight && (
+              <div className="text-center text-sky-200/80">
+                <p>Destination: <span className="text-white font-semibold">{flight.country}</span></p>
+                <p className="text-sm opacity-80">Distance: {flight.distance_km} km • Flight time: {flight.duration_minutes} min</p>
+              </div>
+            )}
+            <TimerPanel durationMinutes={flight?.duration_minutes || 0} running={playing} onDone={onTimerDone} />
           </div>
 
-          {/* Instructions */}
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-8 shadow-xl mb-6">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                1
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Describe your idea</h3>
-                <p className="text-blue-200/80 text-sm">Use the chat panel on the left to tell the AI what you want to build</p>
-              </div>
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-4">
+              <div className="text-sm text-sky-200/80 mb-2">Route</div>
+              <MapFlight path={flight?.path || []} playing={playing} />
             </div>
-
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Watch it build</h3>
-                <p className="text-blue-200/80 text-sm">Your app will appear in this preview as the AI generates the code</p>
-              </div>
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+              <div className="text-sm text-sky-200/80 mb-2">Focus Mode</div>
+              <p className="text-sky-100/80">Enable DND, hide distractions, and enter a cozy cabin vibe while you study.</p>
             </div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Refine and iterate</h3>
-                <p className="text-blue-200/80 text-sm">Continue the conversation to add features and make changes</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="text-center">
-            <p className="text-sm text-blue-300/60">
-              No coding required • Just describe what you want
-            </p>
           </div>
         </div>
+
+        <footer className="pt-6 pb-10 text-center text-xs text-sky-200/60">Built with love • Study Air</footer>
       </div>
     </div>
   )
